@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Menu - Bestellen</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f8f8f8; padding: 2rem; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .product { margin-bottom: 1rem; }
+    input[type="number"] { width: 60px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Producten</h2>
+    <div id="product-list"></div>
+    <button onclick="placeOrder()">Bestelling plaatsen</button>
+  </div>
+
+  <script>
+    const supabase = supabase.createClient('https://vqtkolrpglbtjbozbwxl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM');
+
+    let currentUser;
+
+    async function getProducts() {
+      const { data, error } = await supabase.from('products').select('*');
+      if (error) return alert("Fout bij laden producten");
+      const list = document.getElementById('product-list');
+      data.forEach(product => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <label>${product.name} (€${product.price})</label>
+          <input type="number" id="product-${product.id}" min="0" value="0">
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function placeOrder() {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return alert("Niet ingelogd!");
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({ user_id: userData.user.id })
+        .select()
+        .single();
+
+      if (orderError) return alert("Kon bestelling niet aanmaken");
+
+      const { data: products } = await supabase.from('products').select('*');
+
+      for (const product of products) {
+        const qty = parseInt(document.getElementById(`product-${product.id}`).value);
+        if (qty > 0) {
+          await supabase.from('order_items').insert({
+            order_id: order.id,
+            product_id: product.id,
+            quantity: qty
+          });
+        }
+      }
+
+      alert("Bestelling geplaatst!");
+      window.location.reload();
+    }
+
+    getProducts();
+  </script>
+</body>
+</html>
