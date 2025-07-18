@@ -21,8 +21,12 @@
   </div>
 
   <script>
-    const supabase = supabase.createClient('https://vqtkolrpglbtjbozbwxl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM');
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+  const supabase = createClient(
+    'https://vqtkolrpglbtjbozbwxl.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+  );
     async function login() {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.value,
