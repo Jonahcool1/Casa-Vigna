@@ -1,10 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Login - DrankApp</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
     .container { max-width: 400px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -13,41 +11,42 @@
 </head>
 <body>
   <div class="container">
-    <h2>Login / Registreren</h2>
-    <input type="email" id="email" placeholder="E-mail">
-    <input type="password" id="password" placeholder="Wachtwoord">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Gebruikersnaam">
     <button onclick="login()">Inloggen</button>
-    <button onclick="register()">Registreren</button>
   </div>
 
- <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(
+      'https://vqtkolrpglbtjbozbwxl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+    );
 
-  const supabase = createClient(
-    'https://vqtkolrpglbtjbozbwxl.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
-  );
+    async function login() {
+      const username = document.getElementById('username').value.trim();
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, role')
+        .eq('username', username)
+        .single();
 
-  async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return alert(error.message);
-    window.location.href = "menu.html";
-  }
+      if (error || !data) {
+        alert("Gebruiker niet gevonden.");
+        return;
+      }
 
-  async function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return alert(error.message);
-    alert("Account aangemaakt! Je kunt nu inloggen.");
-  }
+      sessionStorage.setItem('user_id', data.id);
+      sessionStorage.setItem('role', data.role);
 
-  // Maak functies globaal beschikbaar
-  window.login = login;
-  window.register = register;
-</script>
+      if (data.role === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'menu.html';
+      }
+    }
 
+    window.login = login;
+  </script>
 </body>
 </html>
