@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - DrankApp</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2, h3 { margin-top: 2rem; }
+    select, input, button { margin: 0.5rem 0; padding: 0.5rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Dashboard</h2>
+
+    <h3>Gebruikersbeheer</h3>
+    <input type="text" id="newUsername" placeholder="Nieuwe gebruikersnaam">
+    <select id="newUserRole">
+      <option value="user">Gebruiker</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button onclick="addUser()">Gebruiker toevoegen</button>
+
+    <h4>Bestaande gebruikers</h4>
+    <table id="usersTable"></table>
+
+    <h3>Bestellingen bekijken</h3>
+    <label>Filter op gebruiker:</label>
+    <select id="userFilter" onchange="loadOrders()">
+      <option value="">-- Alle gebruikers --</option>
+    </select>
+
+    <div id="ordersContainer"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(
+      'https://vqtkolrpglbtjbozbwxl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+    );
+
+    const user_id = sessionStorage.getItem('user_id');
+    const role = sessionStorage.getItem('role');
+    if (!user_id || role !== 'admin') window.location.href = 'index.html';
+
+    async function addUser() {
+      const username = document.getElementById('newUsername').value.trim();
+      const role = document.getElementById('newUserRole').value;
+      if (!username) return alert("Gebruikersnaam verplicht");
+
+      const { error } = await supabase.from('users').insert({ username, role });
+      if (error) return alert(error.message);
+      alert("Gebruiker toegevoegd");
+      loadUsers();
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) return;
+      await supabase.from('users').delete().eq('id', id);
+      loadUsers();
+    }
+
+    async function loadUsers() {
+      const { data: users } = await supabase.from('users').select('*');
+      const table = document.getElementById('usersTable');
+      const filter = document.getElementById('userFilter');
+
+      table.innerHTML = `<tr><th>Gebruikersnaam</th><th>Rol</th><th>Actie</th></tr>`;
+      filter.innerHTML = `<option value="">-- Alle gebruikers --</option>`;
+
+      users.forEach(u => {
+        table.innerHTML += `
+          <tr>
+            <td>${u.username}</td>
+            <td>${u.role}</td>
+            <td><button onclick="deleteUser('${u.id}')">Verwijderen</button></td>
+          </tr>`;
+        filter.innerHTML += `<option value="${u.id}">${u.username}</option>`;
+      });
+    }
+
+    async function loadOrders() {
+      const userId = document.getElementById('userFilter').value;
+      const query = supabase
+        .from('orders')
+        .select(`
+          id, created_at, user_id,
+          order_items(quantity, product_id, products(name, price)),
+          users(username)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (userId) query.eq('user_id', userId);
+      const { data: orders } = await query;
+
+      const container = document.getElementById('ordersContainer');
+      container.innerHTML = '';
+      orders.forEach(order => {
+        let total = 0;
+        let html = `<strong>Bestelling ${order.id}</strong> (${order.users.username})<br>${new Date(order.created_at).toLocaleString()}<ul>`;
+        order.order_items.forEach(item => {
+          const line = `${item.products.name} x ${item.quantity} = €${item.products.price * item.quantity}`;
+          total += item.products.price * item.quantity;
+          html += `<li>${line}</li>`;
+        });
+        html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
+        container.innerHTML += html;
+      });
+    }
+
+    loadUsers();
+    loadOrders();
+    window.addUser = addUser;
+    window.deleteUser = deleteUser;
+    window.loadOrders = loadOrders;
+  </script>
+</body>
+</html>
