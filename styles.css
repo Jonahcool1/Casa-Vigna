@@ -1,0 +1,117 @@
+/* styles.css */
+
+/* Basis styling */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  background-color: #f6f4e8; /* jouw achtergrondkleur */
+  margin: 0;
+  padding: 1rem;
+  color: #000; /* zwarte tekst */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container met padding en schaduw */
+.container {
+  max-width: 480px;
+  margin: auto;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(71, 131, 103, 0.25); /* iets van hoofdkleur als schaduw */
+}
+
+/* Product item stijl */
+.product {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Product afbeelding */
+.product img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  margin-right: 1rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 2px solid #478367; /* subtiel randje in hoofdkleur */
+}
+
+/* Label met tekstkleur */
+.product label {
+  flex: 1;
+  font-weight: 600;
+  font-size: 1rem;
+  word-break: break-word;
+  color: #000; /* zwarte tekst */
+}
+
+/* Input voor hoeveelheid */
+input[type="number"] {
+  width: 60px;
+  padding: 0.3rem;
+  font-size: 1rem;
+  border: 1.5px solid #478367; /* hoofdkleur */
+  border-radius: 6px;
+  text-align: center;
+  color: #000;
+  background: #f6f4e8; /* achtergrondkleur invoerveld */
+}
+
+/* Knoppen styling */
+button {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background-color: #478367; /* hoofdkleur */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+  box-shadow: 0 4px 6px rgba(71, 131, 103, 0.5);
+}
+
+button:hover {
+  background-color: #3a6b56; /* iets donkerder hoofdkleur */
+}
+
+/* Belangrijke tekst */
+.important {
+  color: #e74c3c; /* jouw “belangrijk” kleur */
+  font-weight: 700;
+}
+
+/* Bestellingen sectie */
+#orders p {
+  background: #fff;
+  padding: 0.6rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  border-left: 4px solid #478367;
+}
+
+/* Responsiveness - Voor kleinere schermen */
+@media (max-width: 400px) {
+  .container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  .product label {
+    font-size: 0.9rem;
+  }
+  button {
+    font-size: 1rem;
+  }
+  input[type="number"] {
+    width: 50px;
+    font-size: 0.9rem;
+  }
+}
