@@ -12,6 +12,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+#Casavigna_TP{
+max-width: 200px;
+height: auto;
+margin-bottom: 1.5rem;
+background-color: #478367;
+}
+
 /* Container met padding en schaduw */
 .container {
   max-width: 480px;
