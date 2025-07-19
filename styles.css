@@ -17,6 +17,8 @@ max-width: 200px;
 height: auto;
 margin-bottom: 1.5rem;
 background-color: #478367;
+    padding: 10px;
+    border-radius: 25px;
 }
 
 /* Container met padding en schaduw */
