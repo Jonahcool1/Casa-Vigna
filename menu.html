@@ -6,16 +6,20 @@
   <style>
     body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
     .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-    table { width: 100%; margin-top: 1rem; }
-    th, td { padding: 0.5rem; text-align: left; }
+    .product { display: flex; align-items: center; margin-bottom: 1rem; }
+    .product img { width: 60px; height: 60px; object-fit: cover; margin-right: 1rem; border-radius: 5px; }
+    .product label { flex: 1; }
     input[type="number"] { width: 60px; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+    #orders p { background: #fafafa; padding: 0.5rem; border-radius: 5px; }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Bestellen</h2>
-    <form id="orderForm"></form>
-    <button onclick="placeOrder()">Bestellen</button>
+    <div id="product-list"></div>
+    <button onclick="placeOrder()">Bestelling plaatsen</button>
+
     <h3>Mijn bestellingen</h3>
     <div id="orders"></div>
   </div>
@@ -24,23 +28,32 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
       'https://vqtkolrpglbtjbozbwxl.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+      'YOUR_ANON_KEY'
     );
 
     const user_id = sessionStorage.getItem('user_id');
     if (!user_id) window.location.href = 'index.html';
 
-    const form = document.getElementById('orderForm');
-
-    const { data: products } = await supabase.from('products').select('*');
-    products.forEach(p => {
-      const row = document.createElement('div');
-      row.innerHTML = `
-        <label>${p.name} (€${p.price})</label>
-        <input type="number" min="0" id="product-${p.id}" value="0">
-      `;
-      form.appendChild(row);
-    });
+    let products = [];
+    async function loadProducts() {
+      const { data, error } = await supabase.from('products').select('*').order('id');
+      if (error) return alert(error.message);
+      products = data;
+      const list = document.getElementById('product-list');
+      list.innerHTML = '';
+      data.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <img src="${p.image_url || ''}" alt="${p.name}">
+          <label style="color: ${p.text_color || 'black'}">
+            ${p.name} (€${p.price})
+          </label>
+          <input type="number" id="qty-${p.id}" min="0" value="0">
+        `;
+        list.appendChild(div);
+      });
+    }
 
     async function placeOrder() {
       const { data: order, error } = await supabase
@@ -48,9 +61,10 @@
         .insert({ user_id })
         .select()
         .single();
+      if (error) return alert(error.message);
 
       for (const p of products) {
-        const qty = parseInt(document.getElementById(`product-${p.id}`).value);
+        const qty = parseInt(document.getElementById(`qty-${p.id}`).value);
         if (qty > 0) {
           await supabase.from('order_items').insert({
             order_id: order.id,
@@ -59,13 +73,12 @@
           });
         }
       }
-
-      alert("Bestelling geplaatst!");
+      alert('Bestelling geplaatst!');
       loadOrders();
     }
 
     async function loadOrders() {
-      const { data: orders } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select(`
           id, created_at,
@@ -73,14 +86,15 @@
         `)
         .eq('user_id', user_id)
         .order('created_at', { ascending: false });
+      if (error) return alert(error.message);
 
       const ordersDiv = document.getElementById('orders');
       ordersDiv.innerHTML = '';
-      orders.forEach(order => {
+      data.forEach(order => {
         let total = 0;
-        let html = `<strong>Bestelling ${order.id}</strong> - ${new Date(order.created_at).toLocaleString()}<ul>`;
+        let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString()}<ul>`;
         order.order_items.forEach(item => {
-          const line = `${item.products.name} x ${item.quantity} = €${item.products.price * item.quantity}`;
+          const line = `${item.products.name} × ${item.quantity} = €${(item.products.price * item.quantity).toFixed(2)}`;
           total += item.products.price * item.quantity;
           html += `<li>${line}</li>`;
         });
@@ -89,8 +103,10 @@
       });
     }
 
-    loadOrders();
     window.placeOrder = placeOrder;
+
+    await loadProducts();
+    await loadOrders();
   </script>
 </body>
 </html>
