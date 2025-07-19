@@ -52,16 +52,16 @@
       tableBody.innerHTML = "";
       data.forEach(p => {
         const row = document.createElement("tr");
-        row.innerHTML = \`
-          <td style="color: \${p.text_color}">\${p.name}</td>
-          <td>€ \${p.price.toFixed(2)}</td>
-          <td><img src="\${p.image_url}" /></td>
-          <td>\${p.text_color}</td>
+        row.innerHTML = `
+          <td style="color: ${p.text_color}">${p.name}</td>
+          <td>€ ${p.price.toFixed(2)}</td>
+          <td><img src="${p.image_url}" /></td>
+          <td>${p.text_color}</td>
           <td>
-            <button onclick="editProduct(\${p.id}, '\${p.name}', \${p.price}, '\${p.image_url}', '\${p.text_color}')">✏️</button>
-            <button onclick="deleteProduct(\${p.id})">🗑️</button>
+            <button onclick="editProduct(${p.id}, '${p.name}', ${p.price}, '${p.image_url}', '${p.text_color}')">✏️</button>
+            <button onclick="deleteProduct(${p.id})">🗑️</button>
           </td>
-        \`;
+        `;
         tableBody.appendChild(row);
       });
     }
@@ -85,7 +85,7 @@
     window.editProduct = async (id, name, price, image, color) => {
       const newName = prompt("Nieuwe naam:", name);
       const newPrice = parseFloat(prompt("Nieuwe prijs:", price));
-      const newImage = prompt("Nieuwe image URL:", image);
+      const newImage = prompt("Nieuwe afbeelding URL:", image);
       const newColor = prompt("Nieuwe tekstkleur:", color);
 
       if (!newName || isNaN(newPrice)) return;
