@@ -15,7 +15,7 @@
 <body>
   <div class="container">
     <h2>Admin Dashboard</h2>
-    <button onclick="goToProducts()">Producten beheren</button>
+    <button id="productenBtn">Producten beheren</button>
     <h3>Gebruikersbeheer</h3>
     <input type="text" id="newUsername" placeholder="Nieuwe gebruikersnaam">
     <select id="newUserRole">
@@ -69,9 +69,9 @@
       const table = document.getElementById('usersTable');
       const filter = document.getElementById('userFilter');
     
-    function goToProducts() {
+    document.getElementById('productenBtn').addEventListener('click', () => {
       window.location.href = 'admin_products.html';
-    }
+    });
 
       table.innerHTML = `<tr><th>Gebruikersnaam</th><th>Rol</th><th>Actie</th></tr>`;
       filter.innerHTML = `<option value="">-- Alle gebruikers --</option>`;
