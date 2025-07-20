@@ -75,7 +75,7 @@
         <div class="item" id="item-${item.id}">
           <span>${item.products.name} (€${item.products.price.toFixed(2)})</span>
           <input type="number" min="0" value="${item.quantity}" id="qty-${item.id}" />
-          <button style="width: 18%;" onclick="deleteItem('${item.id}')">🗑️</button>
+          <button style="width: 18%; margin: 0px;" onclick="deleteItem('${item.id}')">🗑️</button>
         </div>
       `).join("");
     }
