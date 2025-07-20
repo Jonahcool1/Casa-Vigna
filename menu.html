@@ -11,16 +11,51 @@
     .product { display: flex; align-items: center; margin-bottom: 1rem; }
     .product img { width: 60px; height: 60px; object-fit: cover; margin-right: 1rem; border-radius: 5px; }
     .product label { flex: 1; }
-    input[type="number"] { width: 60px; }
-    button { margin-top: 1rem; padding: 0.5rem 1rem; }
-    #orders p { background: #fafafa; padding: 0.5rem; border-radius: 5px; }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .qty-controls button {
+      width: 30px;
+      height: 30px;
+      font-size: 20px;
+      line-height: 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #478367;
+      color: white;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qty-display {
+      min-width: 30px;
+      text-align: center;
+      font-size: 18px;
+      user-select: none;
+    }
+    button.place-order {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #478367;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #orders p {
+      background: #fafafa;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Bestellen</h2>
     <div id="product-list"></div>
-    <button onclick="placeOrder()">Bestelling plaatsen</button>
+    <button class="place-order" onclick="placeOrder()">Bestelling plaatsen</button>
 
     <h3>Mijn bestellingen</h3>
     <div id="orders"></div>
@@ -62,6 +97,15 @@
       });
     }
 
+    function changeQty(productId, delta) {
+      const qtyDiv = document.getElementById(`qty-${productId}`);
+      let currentQty = parseInt(qtyDiv.textContent);
+      if (isNaN(currentQty)) currentQty = 0;
+      let newQty = currentQty + delta;
+      if (newQty < 0) newQty = 0;
+      qtyDiv.textContent = newQty;
+    }
+
     async function placeOrder() {
       const { data: order, error } = await supabase
         .from('orders')
@@ -71,7 +115,7 @@
       if (error) return alert(error.message);
 
       for (const p of products) {
-        const qty = parseInt(document.getElementById(`qty-${p.id}`).value);
+        const qty = parseInt(document.getElementById(`qty-${p.id}`).textContent);
         if (qty > 0) {
           await supabase.from('order_items').insert({
             order_id: order.id,
@@ -82,6 +126,14 @@
       }
       alert('Bestelling geplaatst!');
       loadOrders();
+      resetQuantities();
+    }
+
+    function resetQuantities() {
+      products.forEach(p => {
+        const qtyDiv = document.getElementById(`qty-${p.id}`);
+        if (qtyDiv) qtyDiv.textContent = '0';
+      });
     }
 
     async function loadOrders() {
@@ -111,6 +163,7 @@
     }
 
     window.placeOrder = placeOrder;
+    window.changeQty = changeQty;
 
     await loadProducts();
     await loadOrders();
