@@ -21,7 +21,7 @@
     <h3>Gebruikersbeheer</h3>
     <input type="text" id="newUsername" placeholder="Nieuwe gebruikersnaam">
     <select id="newUserRole">
-      <option value="user">Gebruiker</option>
+      <option value="gebruiker">Gebruiker</option>
       <option value="admin">Admin</option>
     </select>
     <button onclick="addUser()">Gebruiker toevoegen</button>
@@ -52,7 +52,7 @@
     if (!user_id || role !== 'admin') window.location.href = 'index.html';
 
     async function addUser() {
-      const username = document.getElementById('newUsername').value.trim().toLowerCase();;
+      const username = document.getElementById('newUsername').value.trim().toLowerCase();
       const role = document.getElementById('newUserRole').value;
       if (!username) return alert("Gebruikersnaam verplicht");
 
