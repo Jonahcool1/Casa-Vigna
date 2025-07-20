@@ -38,7 +38,10 @@
 
     let products = [];
     async function loadProducts() {
-      const { data, error } = await supabase.from('products').select('*').order('id');
+      const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('sort_order', { ascending: true });
       if (error) return alert(error.message);
       products = data;
       const list = document.getElementById('product-list');
