@@ -7,21 +7,36 @@
   <link rel="stylesheet" href="styles.css" />
   <style>
     body { font-family: sans-serif; background: #f6f4e8; padding: 1rem; }
-    .container { max-width: 600px; margin: auto; background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .container { max-width: 650px; margin: auto; background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     h2 { color: #478367; }
-    .item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .item span { flex: 1; }
-    .item input { width: 60px; padding: 0.3rem; text-align: center; }
-    button { background: #478367; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; margin-top: 1rem; }
-    .danger { background: #e74c3c; }
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+      padding: 0.5rem 0;
+    }
+    .item span { flex: 2; }
+    .item input { width: 60px; padding: 0.3rem; text-align: center; margin-right: 1rem; }
+    .item button { background: #e74c3c; color: white; border: none; padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer; }
+    button.save, button.back {
+      background: #478367;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      cursor: pointer;
+    }
+    button.back { background: #aaa; margin-left: 1rem; }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Bestelling Bewerken</h2>
     <div id="orderDetails"></div>
-    <button onclick="saveChanges()">💾 Opslaan</button>
-    <button onclick="window.location.href='admin.html'" class="danger">↩️ Terug</button>
+    <button class="save" onclick="saveChanges()">💾 Opslaan</button>
+    <button class="back" onclick="window.location.href='admin.html'">↩️ Terug</button>
   </div>
 
   <script type="module">
@@ -55,9 +70,10 @@
       orderItems = data;
 
       orderDetailsDiv.innerHTML = data.map(item => `
-        <div class="item">
+        <div class="item" id="item-${item.id}">
           <span>${item.products.name} (€${item.products.price.toFixed(2)})</span>
           <input type="number" min="0" value="${item.quantity}" id="qty-${item.id}" />
+          <button onclick="deleteItem('${item.id}')">🗑️</button>
         </div>
       `).join("");
     }
@@ -75,7 +91,6 @@
         }
       });
 
-      // Pas alle hoeveelheden aan
       for (const update of updates) {
         const { error } = await supabase
           .from("order_items")
@@ -92,8 +107,26 @@
       window.location.href = "admin.html";
     }
 
+    async function deleteItem(itemId) {
+      if (!confirm("Weet je zeker dat je dit product uit de bestelling wilt verwijderen?")) return;
+
+      const { error } = await supabase
+        .from("order_items")
+        .delete()
+        .eq("id", itemId);
+
+      if (error) {
+        alert("Fout bij verwijderen: " + error.message);
+        return;
+      }
+
+      document.getElementById(`item-${itemId}`).remove();
+      orderItems = orderItems.filter(i => i.id !== itemId);
+    }
+
     loadOrder();
     window.saveChanges = saveChanges;
+    window.deleteItem = deleteItem;
   </script>
 </body>
 </html>

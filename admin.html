@@ -103,8 +103,10 @@
 
     // 👉 Voeg bewerk/verwijder knoppen toe
     html += `
+    <div>
       <button onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
       <button onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
+    </div>
       <hr>
     `;
 
