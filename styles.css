@@ -131,6 +131,6 @@ button:hover {
   padding: 1rem;         /* Meer ruimte binnenin */
   width: 100%;           /* Volledige breedte (optioneel) */
   max-width: 400px;      /* Of pas dit aan voor vaste breedte */
-  transform: scale(2);
+  transform: scale(1.1);
   transform-origin: top left;
 }
