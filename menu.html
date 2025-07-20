@@ -65,6 +65,8 @@
 
     <h3>Mijn bestellingen</h3>
     <div id="orders"></div>
+    <p id="totalSpent" style="font-weight: bold; font-size: 1.2rem; margin-top: 1.5rem;">Totaal besteed: €0,00</p>
+
   </div>
 
   <script type="module">
@@ -158,30 +160,42 @@
     }
 
     async function loadOrders() {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          id, created_at,
-          order_items(quantity, product_id, products(name, price))
-        `)
-        .eq('user_id', user_id)
-        .order('created_at', { ascending: false });
-      if (error) return alert(error.message);
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id, created_at,
+      order_items(quantity, product_id, products(name, price))
+    `)
+    .eq('user_id', user_id)
+    .order('created_at', { ascending: false });
 
-      const ordersDiv = document.getElementById('orders');
-      ordersDiv.innerHTML = '';
-      data.forEach(order => {
-        let total = 0;
-        let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString()}<ul>`;
-        order.order_items.forEach(item => {
-          const line = `${item.products.name} × ${item.quantity} = €${(item.products.price * item.quantity).toFixed(2)}`;
-          total += item.products.price * item.quantity;
-          html += `<li>${line}</li>`;
-        });
-        html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
-        ordersDiv.innerHTML += html;
-      });
-    }
+  if (error) return alert(error.message);
+
+  const ordersDiv = document.getElementById('orders');
+  ordersDiv.innerHTML = '';
+
+  let totalSpent = 0; // 👈 hier tellen we alles op
+
+  data.forEach(order => {
+    let total = 0;
+    let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString()}<ul>`;
+
+    order.order_items.forEach(item => {
+      const subtotal = item.products.price * item.quantity;
+      total += subtotal;
+      html += `<li>${item.products.name} × ${item.quantity} = €${subtotal.toFixed(2)}</li>`;
+    });
+
+    html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
+    ordersDiv.innerHTML += html;
+
+    totalSpent += total; // ✅ voeg dit toe aan het totaal
+  });
+
+  // 👇 Toon het totaalbedrag van alle bestellingen
+  document.getElementById("totalSpent").textContent = `Totaal besteed: €${totalSpent.toFixed(2)}`;
+}
+
 
     window.placeOrder = placeOrder;
     window.changeQty = changeQty;
