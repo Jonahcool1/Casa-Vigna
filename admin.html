@@ -123,14 +123,12 @@ async function deleteOrder(orderId) {
   const confirmed = confirm("Weet je zeker dat je deze bestelling wilt verwijderen?");
   if (!confirmed) return;
 
-  // Verwijder eerst gekoppelde order_items
   const { error: itemError } = await supabase.from('order_items').delete().eq('order_id', orderId);
   if (itemError) {
     alert("Fout bij verwijderen van order items: " + itemError.message);
     return;
   }
 
-  // Verwijder daarna de bestelling zelf
   const { error: orderError } = await supabase.from('orders').delete().eq('id', orderId);
   if (orderError) {
     alert("Fout bij verwijderen van bestelling: " + orderError.message);
@@ -140,6 +138,10 @@ async function deleteOrder(orderId) {
   alert("Bestelling verwijderd.");
   loadOrders();
 }
+
+// 👇 Zet dit erbij onderaan je script:
+window.deleteOrder = deleteOrder;
+
 
 
 
