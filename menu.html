@@ -39,9 +39,9 @@
     let products = [];
     async function loadProducts() {
       const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('sort_order', { ascending: true });
+        .from('products')
+        .select('*')
+        .order('sort_order', { ascending: true });
       if (error) return alert(error.message);
       products = data;
       const list = document.getElementById('product-list');
@@ -51,10 +51,12 @@
         div.className = 'product';
         div.innerHTML = `
           <img src="${p.image_url || ''}" alt="${p.name}">
-          <label style="color: ${p.text_color || 'black'}">
-            ${p.name} (€${p.price})
-          </label>
-          <input type="number" id="qty-${p.id}" min="0" value="0">
+          <label style="color: ${p.text_color || 'black'}">${p.name} (€${p.price})</label>
+          <div class="qty-controls">
+            <button aria-label="Verlaag aantal" onclick="changeQty(${p.id}, -1)">−</button>
+            <div id="qty-${p.id}" class="qty-display">0</div>
+            <button aria-label="Verhoog aantal" onclick="changeQty(${p.id}, 1)">+</button>
+          </div>
         `;
         list.appendChild(div);
       });
