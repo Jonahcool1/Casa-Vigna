@@ -95,6 +95,7 @@
         div.innerHTML = `
         <div>
           <img src="${p.image_url || ''}" alt="${p.name}" onclick="showImagePopup('${p.image_url || ''}')" style="cursor:pointer;">
+          <br>
           <label style="color: ${p.text_color || 'black'}">${p.name} (€${p.price})</label>
         </div>
           <div class="qty-controls">
