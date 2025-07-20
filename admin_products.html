@@ -94,24 +94,70 @@
     };
 
     window.editProduct = async (id, name, price, image, color, order) => {
+  const field = prompt(
+    "Welk veld wil je aanpassen?\n" +
+    "Opties:\n" +
+    "1. Naam\n" +
+    "2. Prijs\n" +
+    "3. Afbeelding URL\n" +
+    "4. Tekstkleur\n" +
+    "5. Volgorde\n" +
+    "(typ het nummer)"
+  );
+
+  if (!field) return;
+
+  const update = {};
+
+  switch (field.trim()) {
+    case "1":
       const newName = prompt("Nieuwe naam:", name);
-      const newPrice = parseFloat(prompt("Nieuwe prijs:", price));
+      if (newName) update.name = newName;
+      break;
+
+    case "2":
+      const newPrice = parseFloat(prompt("Nieuwe prijs (€):", price));
+      if (!isNaN(newPrice)) update.price = newPrice;
+      break;
+
+    case "3":
       const newImage = prompt("Nieuwe afbeelding URL:", image);
-      const newColor = prompt("Nieuwe tekstkleur:", color);
-      const newOrder = parseInt(prompt("Nieuwe volgorde:", order));
+      if (newImage) update.image_url = newImage;
+      break;
 
-      if (!newName || isNaN(newPrice)) return;
+    case "4":
+      const newColor = prompt("Nieuwe tekstkleur (bv. #000000):", color);
+      if (newColor) update.text_color = newColor;
+      break;
 
-      await supabase.from("products").update({
-        name: newName,
-        price: newPrice,
-        image_url: newImage,
-        text_color: newColor,
-        sort_order: newOrder
-      }).eq("id", id);
+    case "5":
+      const newOrder = parseInt(prompt("Nieuwe volgorde (getal):", order));
+      if (!isNaN(newOrder)) update.sort_order = newOrder;
+      break;
 
-      fetchProducts();
-    };
+    default:
+      alert("Ongeldige keuze.");
+      return;
+  }
+
+  if (Object.keys(update).length === 0) {
+    alert("Geen aanpassing gedaan.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .update(update)
+    .eq("id", id);
+
+  if (error) {
+    alert("Fout bij bijwerken: " + error.message);
+  } else {
+    alert("Product bijgewerkt!");
+    fetchProducts();
+  }
+};
+
 
     window.deleteProduct = async (id) => {
       if (!confirm("Weet je zeker dat je dit product wilt verwijderen?")) return;
