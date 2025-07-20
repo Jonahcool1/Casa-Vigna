@@ -126,3 +126,11 @@ button:hover {
     font-size: 0.9rem;
   }
 }
+#userFilter {
+  font-size: 1.5rem;     /* Vergroot tekstgrootte */
+  padding: 1rem;         /* Meer ruimte binnenin */
+  width: 100%;           /* Volledige breedte (optioneel) */
+  max-width: 400px;      /* Of pas dit aan voor vaste breedte */
+  transform: scale(2);
+  transform-origin: top left;
+}
