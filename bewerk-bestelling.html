@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bestelling Bewerken - Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: sans-serif; background: #f6f4e8; padding: 1rem; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { color: #478367; }
+    .item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .item span { flex: 1; }
+    .item input { width: 60px; padding: 0.3rem; text-align: center; }
+    button { background: #478367; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; margin-top: 1rem; }
+    .danger { background: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Bestelling Bewerken</h2>
+    <div id="orderDetails"></div>
+    <button onclick="saveChanges()">💾 Opslaan</button>
+    <button onclick="window.location.href='admin.html'" class="danger">↩️ Terug</button>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(
+      'https://vqtkolrpglbtjbozbwxl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("id");
+    if (!orderId) {
+      alert("Geen bestelling ID opgegeven.");
+      window.location.href = "admin.html";
+    }
+
+    const orderDetailsDiv = document.getElementById("orderDetails");
+    let orderItems = [];
+
+    async function loadOrder() {
+      const { data, error } = await supabase
+        .from("order_items")
+        .select("id, quantity, product_id, products(name, price)")
+        .eq("order_id", orderId);
+
+      if (error) {
+        alert("Fout bij laden bestelling: " + error.message);
+        return;
+      }
+
+      orderItems = data;
+
+      orderDetailsDiv.innerHTML = data.map(item => `
+        <div class="item">
+          <span>${item.products.name} (€${item.products.price.toFixed(2)})</span>
+          <input type="number" min="0" value="${item.quantity}" id="qty-${item.id}" />
+        </div>
+      `).join("");
+    }
+
+    async function saveChanges() {
+      const updates = [];
+
+      orderItems.forEach(item => {
+        const newQty = parseInt(document.getElementById(`qty-${item.id}`).value);
+        if (!isNaN(newQty)) {
+          updates.push({
+            id: item.id,
+            quantity: newQty
+          });
+        }
+      });
+
+      // Pas alle hoeveelheden aan
+      for (const update of updates) {
+        const { error } = await supabase
+          .from("order_items")
+          .update({ quantity: update.quantity })
+          .eq("id", update.id);
+
+        if (error) {
+          alert("Fout bij opslaan: " + error.message);
+          return;
+        }
+      }
+
+      alert("Bestelling opgeslagen!");
+      window.location.href = "admin.html";
+    }
+
+    loadOrder();
+    window.saveChanges = saveChanges;
+  </script>
+</body>
+</html>

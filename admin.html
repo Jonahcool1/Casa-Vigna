@@ -92,22 +92,53 @@
   orders.forEach(order => {
     let total = 0;
     let html = `<strong>Bestelling ${order.id}</strong> (${order.users.username})<br>${new Date(order.created_at).toLocaleString()}<ul>`;
-    
+
     order.order_items.forEach(item => {
       const subtotal = item.products.price * item.quantity;
       total += subtotal;
       html += `<li>${item.products.name} × ${item.quantity} = €${subtotal.toFixed(2)}</li>`;
     });
 
-    html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
+    html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><br>`;
+
+    // 👉 Voeg bewerk/verwijder knoppen toe
+    html += `
+      <button onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
+      <button onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
+      <hr>
+    `;
+
     container.innerHTML += html;
     totalSpent += total;
   });
 
-  // 👇 Update totaal besteed bedrag
   document.getElementById('totalAdminSpent').textContent =
     `Totaal besteed: €${totalSpent.toFixed(2)}`;
 }
+
+
+async function deleteOrder(orderId) {
+  const confirmed = confirm("Weet je zeker dat je deze bestelling wilt verwijderen?");
+  if (!confirmed) return;
+
+  // Verwijder eerst gekoppelde order_items
+  const { error: itemError } = await supabase.from('order_items').delete().eq('order_id', orderId);
+  if (itemError) {
+    alert("Fout bij verwijderen van order items: " + itemError.message);
+    return;
+  }
+
+  // Verwijder daarna de bestelling zelf
+  const { error: orderError } = await supabase.from('orders').delete().eq('id', orderId);
+  if (orderError) {
+    alert("Fout bij verwijderen van bestelling: " + orderError.message);
+    return;
+  }
+
+  alert("Bestelling verwijderd.");
+  loadOrders();
+}
+
 
 
     async function loadUsers() {
