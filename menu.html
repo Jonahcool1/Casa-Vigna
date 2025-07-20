@@ -104,13 +104,28 @@
     }
 
     function changeQty(productId, delta) {
-      const qtyDiv = document.getElementById(`qty-${productId}`);
-      let currentQty = parseInt(qtyDiv.textContent);
-      if (isNaN(currentQty)) currentQty = 0;
-      let newQty = currentQty + delta;
-      if (newQty < 0) newQty = 0;
-      qtyDiv.textContent = newQty;
+  const qtyDiv = document.getElementById(`qty-${productId}`);
+  let currentQty = parseInt(qtyDiv.textContent);
+  if (isNaN(currentQty)) currentQty = 0;
+  let newQty = currentQty + delta;
+  if (newQty < 0) newQty = 0;
+  qtyDiv.textContent = newQty;
+
+  updateTotal(); // 👈 Voeg deze regel toe
+}
+
+
+    function updateTotal() {
+  let total = 0;
+  products.forEach(p => {
+    const qty = parseInt(document.getElementById(`qty-${p.id}`).textContent);
+    if (!isNaN(qty) && qty > 0) {
+      total += qty * p.price;
     }
+  });
+  document.getElementById("totalPrice").textContent = `Totaal: €${total.toFixed(2)}`;
+}
+
 
     async function placeOrder() {
       const { data: order, error } = await supabase
