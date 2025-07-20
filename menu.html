@@ -93,8 +93,10 @@
         const div = document.createElement('div');
         div.className = 'product';
         div.innerHTML = `
+        <div>
           <img src="${p.image_url || ''}" alt="${p.name}" onclick="showImagePopup('${p.image_url || ''}')" style="cursor:pointer;">
           <label style="color: ${p.text_color || 'black'}">${p.name} (€${p.price})</label>
+        </div>
           <div class="qty-controls">
             <button aria-label="Verlaag aantal" onclick="changeQty(${p.id}, -1)">−</button>
             <div id="qty-${p.id}" class="qty-display">0</div>
