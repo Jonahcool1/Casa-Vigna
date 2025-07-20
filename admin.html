@@ -36,6 +36,8 @@
     </select>
 
     <div id="ordersContainer"></div>
+    <p id="totalAdminSpent" style="font-weight: bold; font-size: 1.2rem; margin-top: 1rem;">Totaal besteed: €0,00</p>
+
   </div>
 
   <script type="module">
@@ -66,28 +68,47 @@
       loadUsers();
     }
 
-    async function loadUsers() {
-      const { data: users } = await supabase.from('users').select('*');
-      const table = document.getElementById('usersTable');
-      const filter = document.getElementById('userFilter');
+    async function loadOrders() {
+  const userId = document.getElementById('userFilter').value;
+
+  const query = supabase
+    .from('orders')
+    .select(`
+      id, created_at, user_id,
+      order_items(quantity, product_id, products(name, price)),
+      users(username)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (userId) query.eq('user_id', userId);
+
+  const { data: orders, error } = await query;
+  if (error) return alert(error.message);
+
+  const container = document.getElementById('ordersContainer');
+  container.innerHTML = '';
+  let totalSpent = 0;
+
+  orders.forEach(order => {
+    let total = 0;
+    let html = `<strong>Bestelling ${order.id}</strong> (${order.users.username})<br>${new Date(order.created_at).toLocaleString()}<ul>`;
     
-    document.getElementById('productenBtn').addEventListener('click', () => {
-      window.location.href = 'admin_products.html';
+    order.order_items.forEach(item => {
+      const subtotal = item.products.price * item.quantity;
+      total += subtotal;
+      html += `<li>${item.products.name} × ${item.quantity} = €${subtotal.toFixed(2)}</li>`;
     });
 
-      table.innerHTML = `<tr><th>Gebruikersnaam</th><th>Rol</th><th>Actie</th></tr>`;
-      filter.innerHTML = `<option value="">-- Alle gebruikers --</option>`;
+    html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
+    container.innerHTML += html;
+    totalSpent += total;
+  });
 
-      users.forEach(u => {
-        table.innerHTML += `
-          <tr>
-            <td>${u.username}</td>
-            <td>${u.role}</td>
-            <td><button onclick="deleteUser('${u.id}')">🗑️</button></td>
-          </tr>`;
-        filter.innerHTML += `<option value="${u.id}">${u.username}</option>`;
-      });
-    }
+  // 👇 Update totaal besteed bedrag
+  document.getElementById('totalAdminSpent').textContent =
+    `Totaal besteed: €${totalSpent.toFixed(2)}`;
+}
+
 
     async function loadOrders() {
       const userId = document.getElementById('userFilter').value;
