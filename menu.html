@@ -96,7 +96,7 @@
         <div>
           <img src="${p.image_url || ''}" alt="${p.name}" onclick="showImagePopup('${p.image_url || ''}')" style="cursor:pointer;">
           <br>
-          <label style="color: ${p.text_color || 'black'}">${p.name} (€${p.price})</label>
+          <label style="color: ${p.text_color || 'black'} text-align: center;">${p.name} (€${p.price})</label>
         </div>
           <div class="qty-controls">
             <button aria-label="Verlaag aantal" onclick="changeQty(${p.id}, -1)">−</button>
