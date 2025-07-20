@@ -103,9 +103,9 @@
 
     // 👉 Voeg bewerk/verwijder knoppen toe
     html += `
-    <div>
-      <button style-"width: 50;" onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
-      <button style-"width: 50;" onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
+    <div style="display: flex;">
+      <button style-"width: 48%; margin-right: 10px;" onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
+      <button style-"width: 48%;" onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
     </div>
       <hr>
     `;
