@@ -56,15 +56,16 @@
     const bucket = 'product-images'; // Jouw storage bucket naam
 
     async function uploadImage(file) {
-      const filename = `${Date.now()}_${file.name}`;
-      const { data, error } = await supabase.storage.from(bucket).upload(filename, file);
-      if (error) {
-        alert('Upload mislukt: ' + error.message);
-        return null;
-      }
-      const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(filename);
-      return publicUrlData?.publicUrl;
-    }
+  const filename = `${Date.now()}_${file.name}`;
+  const { data, error } = await supabase.storage.from('product-images').upload(filename, file);
+  if (error) {
+    alert('Upload mislukt: ' + error.message);
+    return null;
+  }
+  const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(filename);
+  return publicUrlData?.publicUrl;
+}
+
 
     async function fetchProducts() {
       const { data, error } = await supabase
@@ -116,59 +117,100 @@
     };
 
     window.editProduct = async (id, name, price, image, color, order) => {
-      const field = prompt(
-        "Welk veld wil je aanpassen?\n" +
-        "Opties:\n" +
-        "1. Naam\n" +
-        "2. Prijs\n" +
-        "3. Afbeelding URL\n" +
-        "4. Tekstkleur\n" +
-        "5. Volgorde\n" +
-        "(typ het nummer)"
-      );
+  const field = prompt(
+    "Welk veld wil je aanpassen?\n" +
+    "Opties:\n" +
+    "1. Naam\n" +
+    "2. Prijs\n" +
+    "3. Afbeelding\n" +
+    "4. Tekstkleur\n" +
+    "5. Volgorde\n" +
+    "(typ het nummer)"
+  );
 
-      if (!field) return;
+  if (!field) return;
 
-      const update = {};
-      switch (field.trim()) {
-        case "1":
-          const newName = prompt("Nieuwe naam:", name);
-          if (newName) update.name = newName;
-          break;
-        case "2":
-          const newPrice = parseFloat(prompt("Nieuwe prijs (€):", price));
-          if (!isNaN(newPrice)) update.price = newPrice;
-          break;
-        case "3":
-          const newImage = prompt("Nieuwe afbeelding URL:", image);
-          if (newImage) update.image_url = newImage;
-          break;
-        case "4":
-          const newColor = prompt("Nieuwe tekstkleur (bv. #000000):", color);
-          if (newColor) update.text_color = newColor;
-          break;
-        case "5":
-          const newOrder = parseInt(prompt("Nieuwe volgorde (getal):", order));
-          if (!isNaN(newOrder)) update.sort_order = newOrder;
-          break;
-        default:
-          alert("Ongeldige keuze.");
-          return;
-      }
+  const update = {};
 
-      if (Object.keys(update).length === 0) {
-        alert("Geen aanpassing gedaan.");
+  switch (field.trim()) {
+    case "1":
+      const newName = prompt("Nieuwe naam:", name);
+      if (newName) update.name = newName;
+      break;
+
+    case "2":
+      const newPrice = parseFloat(prompt("Nieuwe prijs (€):", price));
+      if (!isNaN(newPrice)) update.price = newPrice;
+      break;
+
+    case "3":
+      const method = prompt("Wil je een nieuwe URL gebruiken of uploaden?\nTyp 'url' of 'upload'");
+      if (!method) return;
+
+      if (method.toLowerCase() === "url") {
+        const newImage = prompt("Nieuwe afbeelding URL:", image);
+        if (newImage) update.image_url = newImage;
+      } else if (method.toLowerCase() === "upload") {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = "image/*";
+        fileInput.style.display = "none";
+
+        fileInput.addEventListener("change", async () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+
+          const uploadedUrl = await uploadImage(file);
+          if (uploadedUrl) {
+            update.image_url = uploadedUrl;
+            const { error } = await supabase.from("products").update(update).eq("id", id);
+            if (error) {
+              alert("Fout bij upload: " + error.message);
+            } else {
+              alert("Afbeelding bijgewerkt!");
+              fetchProducts();
+            }
+          }
+        });
+
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        return; // stop hier, update komt uit de fileInput event
+      } else {
+        alert("Ongeldige keuze.");
         return;
       }
+      break;
 
-      const { error } = await supabase.from("products").update(update).eq("id", id);
-      if (error) {
-        alert("Fout bij bijwerken: " + error.message);
-      } else {
-        alert("Product bijgewerkt!");
-        fetchProducts();
-      }
-    };
+    case "4":
+      const newColor = prompt("Nieuwe tekstkleur (bv. #000000):", color);
+      if (newColor) update.text_color = newColor;
+      break;
+
+    case "5":
+      const newOrder = parseInt(prompt("Nieuwe volgorde (getal):", order));
+      if (!isNaN(newOrder)) update.sort_order = newOrder;
+      break;
+
+    default:
+      alert("Ongeldige keuze.");
+      return;
+  }
+
+  if (Object.keys(update).length === 0) {
+    alert("Geen aanpassing gedaan.");
+    return;
+  }
+
+  const { error } = await supabase.from("products").update(update).eq("id", id);
+  if (error) {
+    alert("Fout bij bijwerken: " + error.message);
+  } else {
+    alert("Product bijgewerkt!");
+    fetchProducts();
+  }
+};
+
 
     window.deleteProduct = async (id) => {
       if (!confirm("Weet je zeker dat je dit product wilt verwijderen?")) return;
