@@ -110,32 +110,24 @@
 }
 
 
-    async function loadOrders() {
-      const userId = document.getElementById('userFilter').value;
-      const query = supabase
-        .from('orders')
-        .select(`
-          id, created_at, user_id,
-          order_items(quantity, product_id, products(name, price)),
-          users(username)
-        `)
-        .order('created_at', { ascending: false });
+    async function loadUsers() {
+      const { data: users } = await supabase.from('users').select('*');
+      const table = document.getElementById('usersTable');
+      const filter = document.getElementById('userFilter');
+    document.getElementById('productenBtn').addEventListener('click', () => {
+      window.location.href = 'admin_products.html';
+    });
+      table.innerHTML = `<tr><th>Gebruikersnaam</th><th>Rol</th><th>Actie</th></tr>`;
+      filter.innerHTML = `<option value="">-- Alle gebruikers --</option>`;
 
-      if (userId) query.eq('user_id', userId);
-      const { data: orders } = await query;
-
-      const container = document.getElementById('ordersContainer');
-      container.innerHTML = '';
-      orders.forEach(order => {
-        let total = 0;
-        let html = `<strong>Bestelling ${order.id}</strong> (${order.users.username})<br>${new Date(order.created_at).toLocaleString()}<ul>`;
-        order.order_items.forEach(item => {
-          const line = `${item.products.name} x ${item.quantity} = €${item.products.price * item.quantity}`;
-          total += item.products.price * item.quantity;
-          html += `<li>${line}</li>`;
-        });
-        html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
-        container.innerHTML += html;
+      users.forEach(u => {
+        table.innerHTML += `
+          <tr>
+            <td>${u.username}</td>
+            <td>${u.role}</td>
+            <td><button onclick="deleteUser('${u.id}')">🗑️</button></td>
+          </tr>`;
+        filter.innerHTML += `<option value="${u.id}">${u.username}</option>`;
       });
     }
 
