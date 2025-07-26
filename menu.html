@@ -133,27 +133,42 @@
 
 
     async function placeOrder() {
-      const { data: order, error } = await supabase
-        .from('orders')
-        .insert({ user_id })
-        .select()
-        .single();
-      if (error) return alert(error.message);
+  // 👇 Verzamel eerst alle items met qty > 0
+  const itemsToOrder = products
+    .map(p => ({
+      product_id: p.id,
+      quantity: parseInt(document.getElementById(`qty-${p.id}`).textContent)
+    }))
+    .filter(item => item.quantity > 0);
 
-      for (const p of products) {
-        const qty = parseInt(document.getElementById(`qty-${p.id}`).textContent);
-        if (qty > 0) {
-          await supabase.from('order_items').insert({
-            order_id: order.id,
-            product_id: p.id,
-            quantity: qty
-          });
-        }
-      }
-      alert('Bestelling geplaatst!');
-      loadOrders();
-      resetQuantities();
-    }
+  // 👉 Check of er minstens één item is
+  if (itemsToOrder.length === 0) {
+    alert("Je moet minstens één product kiezen om te bestellen.");
+    return;
+  }
+
+  // ✅ Eerst bestelling aanmaken
+  const { data: order, error } = await supabase
+    .from('orders')
+    .insert({ user_id })
+    .select()
+    .single();
+  if (error) return alert(error.message);
+
+  // ✅ Daarna de items toevoegen
+  for (const item of itemsToOrder) {
+    await supabase.from('order_items').insert({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity
+    });
+  }
+
+  alert('Bestelling geplaatst!');
+  loadOrders();
+  resetQuantities();
+}
+
 
     function resetQuantities() {
       products.forEach(p => {
