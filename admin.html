@@ -34,6 +34,9 @@
     <select id="userFilter" onchange="loadOrders()">
       <option value="">-- Alle gebruikers --</option>
     </select>
+    <label>Besteld op:</label>
+      <input type="date" id="orderDate" onchange="loadOrders()">
+
 
     <div id="ordersContainer"></div>
     <p id="totalAdminSpent" style="font-weight: bold; font-size: 1.2rem; margin-top: 1rem;">Totaal besteed: €0,00</p>
@@ -118,8 +121,9 @@
 
     async function loadOrders() {
   const userId = document.getElementById('userFilter').value;
+  const orderDate = document.getElementById('orderDate').value;
 
-  const query = supabase
+  let query = supabase
     .from('orders')
     .select(`
       id, created_at, user_id,
@@ -128,7 +132,12 @@
     `)
     .order('created_at', { ascending: false });
 
-  if (userId) query.eq('user_id', userId);
+  if (userId) query = query.eq('user_id', userId);
+  if (orderDate) {
+    const start = `${orderDate}T00:00:00`;
+    const end = `${orderDate}T23:59:59`;
+    query = query.gte('created_at', start).lte('created_at', end);
+  }
 
   const { data: orders, error } = await query;
   if (error) return alert(error.message);
@@ -149,12 +158,11 @@
 
     html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><br>`;
 
-    // 👉 Voeg bewerk/verwijder knoppen toe
     html += `
-    <div style="display: flex;">
-      <button style-"width: 48%;" onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
-      <button style-"width: 48%;" style="margin-left: 10px;" onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
-    </div>
+      <div style="display: flex;">
+        <button style="width: 48%;" onclick="window.location.href='bewerk-bestelling.html?id=${order.id}'">✏️ Bewerken</button>
+        <button style="width: 48%; margin-left: 10px;" onclick="deleteOrder(${order.id})">🗑️ Verwijderen</button>
+      </div>
       <hr>
     `;
 
@@ -165,6 +173,7 @@
   document.getElementById('totalAdminSpent').textContent =
     `Totaal besteed: €${totalSpent.toFixed(2)}`;
 }
+
 
 
 async function deleteOrder(orderId) {
