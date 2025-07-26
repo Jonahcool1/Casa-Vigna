@@ -62,11 +62,59 @@
       loadUsers();
     }
 
-    async function deleteUser(id) {
-      if (!confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) return;
-      await supabase.from('users').delete().eq('id', id);
-      loadUsers();
+    async function deleteUser(userId) {
+  if (!confirm("Weet je zeker dat je deze gebruiker wilt verwijderen?")) return;
+
+  // 1. Haal alle orders van de gebruiker op
+  const { data: orders, error: ordersError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (ordersError) {
+    alert("Fout bij ophalen van bestellingen: " + ordersError.message);
+    return;
+  }
+
+  // 2. Verwijder eerst alle order_items gekoppeld aan deze orders
+  for (const order of orders) {
+    const { error: deleteItemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', order.id);
+    if (deleteItemsError) {
+      alert("Fout bij verwijderen van order items: " + deleteItemsError.message);
+      return;
     }
+  }
+
+  // 3. Verwijder daarna de orders zelf
+  const { error: deleteOrdersError } = await supabase
+    .from('orders')
+    .delete()
+    .eq('user_id', userId);
+
+  if (deleteOrdersError) {
+    alert("Fout bij verwijderen van bestellingen: " + deleteOrdersError.message);
+    return;
+  }
+
+  // 4. Verwijder daarna de gebruiker
+  const { error: deleteUserError } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', userId);
+
+  if (deleteUserError) {
+    alert("Fout bij verwijderen van gebruiker: " + deleteUserError.message);
+    return;
+  }
+
+  alert("Gebruiker en alle bijbehorende bestellingen succesvol verwijderd.");
+  loadUsers();
+  loadOrders();
+}
+
 
     async function loadOrders() {
   const userId = document.getElementById('userFilter').value;
