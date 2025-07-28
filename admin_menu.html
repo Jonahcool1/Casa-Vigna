@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Menu - Bestellen</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .product { display: flex; align-items: center; margin-bottom: 1rem; }
+    .product img { width: 110px; height: 110px; object-fit: contain; margin-right: 1rem; border-radius: 5px; }
+    .product label { flex: 1; }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-direction: row-reverse;
+    }
+    .qty-controls button {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  line-height: 1;
+  border: none;
+  border-radius: 5px;
+  background-color: #478367;
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+    .qty-display {
+      min-width: 30px;
+      text-align: center;
+      font-size: 18px;
+      user-select: none;
+    }
+    button.place-order {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #478367;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #orders p {
+      background: #fafafa;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img id="Casavigna_TP" src="https://casavigna.com/wp-content/uploads/2019/03/CasaVigna_logo_wit-300x62.png" alt="CasaVigna Logo" />
+    <h2>Bestellen</h2>
+    
+    <label for="userSelect"><strong>Bestellen voor gebruiker:</strong></label>
+    <select id="userSelect" style="margin-bottom: 1rem;">
+    <option value="">⏳ Laden...</option>
+    </select>
+
+    <div id="product-list"></div>
+    <p id="totalPrice" style="font-weight: bold; font-size: 1.2rem; margin-top: 1rem;">Totaal: €0,00</p>
+    <button class="place-order" onclick="placeOrder()">Bestelling plaatsen</button>
+
+    <h3>Mijn bestellingen</h3>
+    <div id="orders"></div>
+    <p id="totalSpent" style="font-weight: bold; font-size: 1.2rem; margin-top: 1.5rem;">Totaal besteed: €0,00</p>
+
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabase = createClient(
+      'https://vqtkolrpglbtjbozbwxl.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxdGtvbHJwZ2xidGpib3pid3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTQ0OTcsImV4cCI6MjA2ODQzMDQ5N30.Kck5a2iI1JFzeDhlDBHlndalzhyEPOwNklJ9Q7yG2FM'
+    );
+
+    const user_id = sessionStorage.getItem('user_id');
+    if (!user_id) window.location.href = 'index.html';
+
+    let products = [];
+    async function loadProducts() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) return alert(error.message);
+      products = data;
+      const list = document.getElementById('product-list');
+      list.innerHTML = '';
+      data.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+        <div style="width: 50%;">
+          <img src="${p.image_url || ''}" alt="${p.name}" onclick="showImagePopup('${p.image_url || ''}')" style="cursor:pointer; display: block; margin: 0 auto;">
+          <br>
+          <p style="color: #000000;text-align: center;margin: 0px;font-weight: bold;">${p.name} (€${p.price})</p>
+        </div>
+          <div style="width: 50%;" class="qty-controls">
+            <button aria-label="Verlaag aantal" onclick="changeQty(${p.id}, -1)">−</button>
+            <div id="qty-${p.id}" class="qty-display">0</div>
+            <button aria-label="Verhoog aantal" onclick="changeQty(${p.id}, 1)">+</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function changeQty(productId, delta) {
+  const qtyDiv = document.getElementById(`qty-${productId}`);
+  let currentQty = parseInt(qtyDiv.textContent);
+  if (isNaN(currentQty)) currentQty = 0;
+  let newQty = currentQty + delta;
+  if (newQty < 0) newQty = 0;
+  qtyDiv.textContent = newQty;
+
+  updateTotal(); // 👈 Voeg deze regel toe
+}
+
+
+    function updateTotal() {
+  let total = 0;
+  products.forEach(p => {
+    const qty = parseInt(document.getElementById(`qty-${p.id}`).textContent);
+    if (!isNaN(qty) && qty > 0) {
+      total += qty * p.price;
+    }
+  });
+  document.getElementById("totalPrice").textContent = `Totaal: €${total.toFixed(2)}`;
+}
+
+
+    async function placeOrder() {
+  // 👇 Verzamel eerst alle items met qty > 0
+  const itemsToOrder = products
+    .map(p => ({
+      product_id: p.id,
+      quantity: parseInt(document.getElementById(`qty-${p.id}`).textContent)
+    }))
+    .filter(item => item.quantity > 0);
+
+  // 👉 Check of er minstens één item is
+  if (itemsToOrder.length === 0) {
+    alert("Je moet minstens één product kiezen om te bestellen.");
+    return;
+  }
+
+  const selectedUserId = document.getElementById('userSelect').value;
+if (!selectedUserId) return alert('Selecteer een gebruiker om voor te bestellen.');
+
+const { data: order, error } = await supabase
+  .from('orders')
+  .insert({ user_id: selectedUserId })
+    .select()
+    .single();
+  if (error) return alert(error.message);
+
+  // ✅ Daarna de items toevoegen
+  for (const item of itemsToOrder) {
+    await supabase.from('order_items').insert({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity
+    });
+  }
+
+  alert('Bestelling geplaatst!');
+  loadOrders();
+  resetQuantities();
+}
+
+
+    function resetQuantities() {
+      products.forEach(p => {
+        const qtyDiv = document.getElementById(`qty-${p.id}`);
+        if (qtyDiv) qtyDiv.textContent = '0';
+      });
+    }
+
+    async function loadOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id, created_at,
+      order_items(quantity, product_id, products(name, price))
+    `)
+    .eq('user_id', user_id)
+    .order('created_at', { ascending: false });
+
+  if (error) return alert(error.message);
+
+  const ordersDiv = document.getElementById('orders');
+  ordersDiv.innerHTML = '';
+
+  let totalSpent = 0; // 👈 hier tellen we alles op
+
+  data.forEach(order => {
+    let total = 0;
+    let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString()}<ul>`;
+
+    order.order_items.forEach(item => {
+      const subtotal = item.products.price * item.quantity;
+      total += subtotal;
+      html += `<li>${item.products.name} × ${item.quantity} = €${subtotal.toFixed(2)}</li>`;
+    });
+
+    html += `</ul><strong>Totaal: €${total.toFixed(2)}</strong><hr>`;
+    ordersDiv.innerHTML += html;
+
+    totalSpent += total; // ✅ voeg dit toe aan het totaal
+  });
+
+  // 👇 Toon het totaalbedrag van alle bestellingen
+  document.getElementById("totalSpent").textContent = `Totaal besteed: €${totalSpent.toFixed(2)}`;
+}
+
+
+    window.placeOrder = placeOrder;
+    window.changeQty = changeQty;
+
+    await loadProducts();
+    await loadOrders();
+    await loadUsers();
+
+    async function loadUsers() {
+  const { data, error } = await supabase.from('users').select('id, username');
+  if (error) return alert('Gebruikers laden mislukt: ' + error.message);
+
+  const userSelect = document.getElementById('userSelect');
+  userSelect.innerHTML = '';
+
+  data.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.id;
+    option.textContent = user.username;
+    userSelect.appendChild(option);
+  });
+
+  // 👇 Standaard: huidige gebruiker selecteren
+  userSelect.value = user_id;
+}
+
+
+
+    window.showImagePopup = function(url) {
+  const popup = document.getElementById('image-popup');
+  const popupImg = document.getElementById('popup-img');
+  popupImg.src = url;
+  popup.style.display = 'flex';
+};
+
+document.getElementById('close-popup').onclick = () => {
+  document.getElementById('image-popup').style.display = 'none';
+};
+
+  </script>
+<div id="image-popup" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background-color:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:9999;">
+  <span id="close-popup" style="position:absolute; top:20px; right:30px; font-size:2rem; color:white; cursor:pointer;">&times;</span>
+  <img id="popup-img" src="" alt="Vergrote afbeelding" style="max-width:90%; max-height:90%; border-radius:10px;" />
+</div>
+</body>
+</html>
