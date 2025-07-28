@@ -198,7 +198,15 @@
 
   data.forEach(order => {
     let total = 0;
-    let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString()}<ul>`;
+    let html = `<strong>Bestelling ${order.id}</strong> — ${new Date(order.created_at).toLocaleString('nl-NL', {
+  timeZone: 'Europe/Amsterdam',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})
+}<ul>`;
 
     order.order_items.forEach(item => {
       const subtotal = item.products.price * item.quantity;
