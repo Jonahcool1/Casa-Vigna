@@ -134,3 +134,11 @@ button:hover {
   transform: scale(0.8);
   transform-origin: top left;
 }
+#userSelect{
+  font-size: 1.5rem;     /* Vergroot tekstgrootte */
+  padding: 1rem;         /* Meer ruimte binnenin */
+  width: 100%;           /* Volledige breedte (optioneel) */
+  max-width: 400px;      /* Of pas dit aan voor vaste breedte */
+  transform: scale(0.8);
+  transform-origin: top left;
+}
