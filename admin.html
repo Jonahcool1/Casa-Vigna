@@ -149,7 +149,7 @@
 
   orders.forEach(order => {
     let total = 0;
-    let formattedDate = new Date(order.created_at).toLocaleString('nl-NL', {
+    let formattedDate = new Date(order.created_at + 'Z').toLocaleString('nl-NL', {
   timeZone: 'Europe/Amsterdam',
   day: '2-digit',
   month: '2-digit',
@@ -157,6 +157,7 @@
   hour: '2-digit',
   minute: '2-digit'
 });
+
 
 let html = `<strong>Bestelling ${order.id}</strong> — ${formattedDate}<ul>`;
 
